@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ===== Reporte PDF: Orden de Mantenimiento ===== -->
+
+    <template id="report_maintenance_order_document">
+        <t t-call="web.external_layout">
+            <t t-set="doc" t-value="doc"/>
+            <div class="page">
+
+                <!-- Encabezado -->
+                <div class="row mt-2 mb-4">
+                    <div class="col-6">
+                        <h2 class="text-primary">
+                            <strong>Orden de Mantenimiento</strong>
+                        </h2>
+                        <h4><t t-esc="doc.name"/></h4>
+                    </div>
+                    <div class="col-6 text-end">
+                        <span t-attf-class="badge fs-6
+                            #{'bg-secondary' if doc.state == 'draft' else
+                              'bg-info' if doc.state == 'confirmed' else
+                              'bg-warning' if doc.state == 'in_progress' else
+                              'bg-success' if doc.state == 'done' else
+                              'bg-danger'}">
+                            <t t-esc="dict(doc._fields['state'].selection).get(doc.state)"/>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Información general -->
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <td class="fw-bold text-muted" style="width:40%">Vehículo:</td>
+                                <td><t t-esc="doc.vehicle_id.display_name"/></td>
+                            </tr>
+                            <tr t-if="doc.plan_id">
+                                <td class="fw-bold text-muted">Plan:</td>
+                                <td><t t-esc="doc.plan_id.name"/></td>
+                            </tr>
+                            <tr t-if="doc.technician_id">
+                                <td class="fw-bold text-muted">Técnico:</td>
+                                <td><t t-esc="doc.technician_id.name"/></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-6">
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <td class="fw-bold text-muted" style="width:50%">Fecha Programada:</td>
+                                <td><t t-esc="doc.date_scheduled" t-options='{"widget": "date"}'/></td>
+                            </tr>
+                            <tr t-if="doc.date_start">
+                                <td class="fw-bold text-muted">Inicio Real:</td>
+                                <td><t t-esc="doc.date_start" t-options='{"widget": "datetime"}'/></td>
+                            </tr>
+                            <tr t-if="doc.date_done">
+                                <td class="fw-bold text-muted">Cierre Real:</td>
+                                <td><t t-esc="doc.date_done" t-options='{"widget": "datetime"}'/></td>
+                            </tr>
+                            <tr t-if="doc.odometer_at_service">
+                                <td class="fw-bold text-muted">Odómetro:</td>
+                                <td><t t-esc="doc.odometer_at_service"/> km</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tabla de repuestos / materiales -->
+                <div class="row mb-3" t-if="doc.line_ids">
+                    <div class="col-12">
+                        <h5 class="text-primary mb-2">Repuestos y Materiales</h5>
+                        <table class="table table-sm table-striped">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Repuesto / Material</th>
+                                    <th>Unidad</th>
+                                    <th class="text-end">Cant. Planificada</th>
+                                    <th class="text-end">Cant. Real</th>
+                                    <th class="text-end">Costo Unit.</th>
+                                    <th class="text-end">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="doc.line_ids" t-as="line">
+                                    <tr>
+                                        <td><t t-esc="line_index + 1"/></td>
+                                        <td><t t-esc="line.product_id.display_name"/></td>
+                                        <td><t t-esc="line.product_uom_id.name"/></td>
+                                        <td class="text-end"><t t-esc="line.qty_planned"/></td>
+                                        <td class="text-end"><t t-esc="line.qty_delivered"/></td>
+                                        <td class="text-end"><t t-esc="line.unit_cost" t-options='{"widget": "monetary", "display_currency": doc.company_id.currency_id}'/></td>
+                                        <td class="text-end"><t t-esc="line.subtotal" t-options='{"widget": "monetary", "display_currency": doc.company_id.currency_id}'/></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Resumen de costos -->
+                <div class="row mb-3">
+                    <div class="col-6 offset-6">
+                        <table class="table table-sm">
+                            <tr>
+                                <td class="fw-bold">Costo Planificado:</td>
+                                <td class="text-end">
+                                    <t t-esc="doc.planned_cost" t-options='{"widget": "monetary", "display_currency": doc.company_id.currency_id}'/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Costo Real:</td>
+                                <td class="text-end">
+                                    <t t-esc="doc.real_cost" t-options='{"widget": "monetary", "display_currency": doc.company_id.currency_id}'/>
+                                </td>
+                            </tr>
+                            <tr t-attf-class="#{doc.cost_variance > 0 and 'table-danger' or 'table-success'}">
+                                <td class="fw-bold">Variación:</td>
+                                <td class="text-end fw-bold">
+                                    <t t-esc="doc.cost_variance" t-options='{"widget": "monetary", "display_currency": doc.company_id.currency_id}'/>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Observaciones -->
+                <div class="row" t-if="doc.notes">
+                    <div class="col-12">
+                        <h5 class="text-primary mb-2">Observaciones</h5>
+                        <div class="border rounded p-2">
+                            <t t-out="doc.notes"/>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Firma -->
+                <div class="row mt-5">
+                    <div class="col-4 text-center">
+                        <div class="border-top pt-2">Coordinador de Mantenimiento</div>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div class="border-top pt-2">Técnico Responsable</div>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div class="border-top pt-2">Revisión / Recibido</div>
+                    </div>
+                </div>
+
+            </div>
+        </t>
+    </template>
+
+    <template id="report_maintenance_order">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="predictive_maintenance_pro.report_maintenance_order_document"
+                   t-lang="doc.company_id.partner_id.lang"/>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_maintenance_order" model="ir.actions.report">
+        <field name="name">Orden de Mantenimiento</field>
+        <field name="model">pmp.maintenance.order</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">predictive_maintenance_pro.report_maintenance_order</field>
+        <field name="report_file">predictive_maintenance_pro.report_maintenance_order</field>
+        <field name="print_report_name">'Orden_Mantenimiento_' + object.name.replace('/','_')</field>
+        <field name="binding_model_id" ref="model_pmp_maintenance_order"/>
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>

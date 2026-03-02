@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ===== MAINTENANCE HISTORY ===== -->
+
+    <!-- Search -->
+    <record id="view_pmp_maintenance_history_search" model="ir.ui.view">
+        <field name="name">pmp.maintenance.history.search</field>
+        <field name="model">pmp.maintenance.history</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Historial">
+                <field name="vehicle_id"/>
+                <field name="technician_id"/>
+                <field name="description"/>
+                <separator/>
+                <filter string="Este Año" name="this_year"
+                        domain="[('date','>=', time.strftime('%Y-01-01'))]"/>
+                <filter string="Este Mes" name="this_month"
+                        domain="[('date','>=', time.strftime('%Y-%m-01'))]"/>
+                <group expand="0" string="Agrupar por">
+                    <filter string="Vehículo" name="group_vehicle"
+                            context="{'group_by':'vehicle_id'}"/>
+                    <filter string="Técnico" name="group_technician"
+                            context="{'group_by':'technician_id'}"/>
+                    <filter string="Mes" name="group_month"
+                            context="{'group_by':'date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- List -->
+    <record id="view_pmp_maintenance_history_list" model="ir.ui.view">
+        <field name="name">pmp.maintenance.history.list</field>
+        <field name="model">pmp.maintenance.history</field>
+        <field name="arch" type="xml">
+            <list string="Historial de Mantenimiento">
+                <field name="date"/>
+                <field name="vehicle_id"/>
+                <field name="description"/>
+                <field name="odometer_at_service"/>
+                <field name="hours_at_service"/>
+                <field name="technician_id"/>
+                <field name="real_cost" sum="Total Real"/>
+                <field name="order_id"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form -->
+    <record id="view_pmp_maintenance_history_form" model="ir.ui.view">
+        <field name="name">pmp.maintenance.history.form</field>
+        <field name="model">pmp.maintenance.history</field>
+        <field name="arch" type="xml">
+            <form string="Registro de Historial">
+                <sheet>
+                    <group>
+                        <group string="Servicio">
+                            <field name="vehicle_id" required="True"/>
+                            <field name="date" required="True"/>
+                            <field name="technician_id"/>
+                            <field name="odometer_at_service"/>
+                            <field name="hours_at_service"/>
+                        </group>
+                        <group string="Vinculación">
+                            <field name="order_id" readonly="1"/>
+                            <field name="real_cost" readonly="1"/>
+                            <field name="planned_cost" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Descripción del Servicio">
+                        <field name="description" nolabel="1" required="True"/>
+                    </group>
+
+                    <!-- Detalle de Repuestos Reemplazados -->
+                    <notebook>
+                        <page string="Repuestos Reemplazados" name="parts">
+                            <field name="line_ids" readonly="1">
+                                <list>
+                                    <field name="product_id"/>
+                                    <field name="product_uom_id"/>
+                                    <field name="qty_delivered"/>
+                                    <field name="unit_cost"
+                                           groups="predictive_maintenance_pro.group_pmp_coordinator,predictive_maintenance_pro.group_pmp_purchase"/>
+                                    <field name="subtotal"
+                                           groups="predictive_maintenance_pro.group_pmp_coordinator,predictive_maintenance_pro.group_pmp_purchase"/>
+                                    <field name="last_change_date" string="Último Cambio"/>
+                                    <field name="km_since_last_change" string="Km Usados"/>
+                                    <field name="hours_since_last_change" string="Horas Usadas"/>
+                                    <field name="cost_per_km" string="$/km"
+                                           groups="predictive_maintenance_pro.group_pmp_coordinator,predictive_maintenance_pro.group_pmp_purchase"/>
+                                    <field name="cost_per_hour" string="$/h"
+                                           groups="predictive_maintenance_pro.group_pmp_coordinator,predictive_maintenance_pro.group_pmp_purchase"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_pmp_maintenance_history" model="ir.actions.act_window">
+        <field name="name">Historial de Mantenimiento</field>
+        <field name="res_model">pmp.maintenance.history</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_pmp_maintenance_history_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Sin registros de historial aún.
+            </p>
+            <p>
+                El historial se genera automáticamente al completar
+                una orden de mantenimiento.
+            </p>
+        </field>
+    </record>
+
+</odoo>

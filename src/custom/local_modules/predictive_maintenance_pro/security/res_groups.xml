@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- ================================================================
+             Categoría del módulo (para agrupar grupos en la UI de Odoo)
+             ================================================================ -->
+        <record id="module_category_predictive_maintenance" model="ir.module.category">
+            <field name="name">Mantenimiento Predictivo</field>
+            <field name="description">Gestión de mantenimiento preventivo y predictivo para flotas.</field>
+            <field name="sequence">50</field>
+        </record>
+
+        <!-- ================================================================
+             Grupos de acceso
+             ================================================================ -->
+
+        <!-- Coordinador: acceso total — diseña planes, supervisa todo -->
+        <record id="group_pmp_coordinator" model="res.groups">
+            <field name="name">Coordinador de Mantenimiento</field>
+            <field name="category_id" ref="module_category_predictive_maintenance"/>
+            <field name="comment">
+                Acceso completo al módulo: crear/editar planes, órdenes, historial y reportes.
+                Puede gestionar repuestos y ver análisis de costos.
+            </field>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+
+        <!-- Técnico: ejecuta órdenes asignadas, registra consumo de partes -->
+        <record id="group_pmp_technician" model="res.groups">
+            <field name="name">Técnico de Mantenimiento</field>
+            <field name="category_id" ref="module_category_predictive_maintenance"/>
+            <field name="comment">
+                Puede ver planes y órdenes asignadas, registrar avance y consumo de repuestos.
+                No puede crear ni eliminar planes de mantenimiento.
+            </field>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+
+        <!-- Compras: acceso a repuestos y costos para gestión de stock -->
+        <record id="group_pmp_purchase" model="res.groups">
+            <field name="name">Compras — Mantenimiento</field>
+            <field name="category_id" ref="module_category_predictive_maintenance"/>
+            <field name="comment">
+                Puede visualizar planes, órdenes y consumo de repuestos para
+                gestionar adquisiciones. Solo lectura en el módulo de mantenimiento.
+            </field>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+
+    </data>
+</odoo>

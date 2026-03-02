@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ===== FLEET VEHICLE ===== -->
+
+    <!-- Extensión del form de fleet.vehicle con pestañas de mantenimiento predictivo -->
+    <record id="view_fleet_vehicle_form_pmp_inherit" model="ir.ui.view">
+        <field name="name">fleet.vehicle.form.pmp.inherit</field>
+        <field name="model">fleet.vehicle</field>
+        <field name="inherit_id" ref="fleet.fleet_vehicle_view_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Smart buttons de mantenimiento predictivo -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_maintenance_plans"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-list-alt">
+                    <field name="maintenance_plan_count" widget="statinfo"
+                           string="Planes"/>
+                </button>
+                <button name="action_view_maintenance_orders"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-wrench">
+                    <field name="maintenance_order_count" widget="statinfo"
+                           string="Órdenes"/>
+                </button>
+                <button name="action_view_maintenance_history"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-history">
+                    <field name="maintenance_history_count" widget="statinfo"
+                           string="Servicios"/>
+                </button>
+            </xpath>
+
+
+            <!-- Pestaña nueva: Mantenimiento Predictivo -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Mantenimiento Predictivo" name="pmp">
+                    <!-- Grupo: métricas operativas -->
+                    <group string="Métricas Operativas">
+                        <group>
+                            <field name="current_hours" string="Horas de Uso"
+                                   help="Horas acumuladas de operación del vehículo/maquinaria."/>
+                            <field name="maintenance_status" widget="badge"
+                                   decoration-success="maintenance_status == 'ok'"
+                                   decoration-warning="maintenance_status == 'upcoming'"
+                                   decoration-danger="maintenance_status == 'in_maintenance'"
+                                   string="Estado de Mantenimiento"/>
+                        </group>
+                    </group>
+                    <group string="Planes Activos">
+                        <field name="maintenance_plan_ids"
+                               nolabel="1"
+                               domain="[('active','=',True)]">
+                            <list>
+                                <field name="name"/>
+                                <field name="trigger_type" widget="badge"/>
+                                <field name="next_trigger_value"/>
+                                <field name="order_count" string="Órdenes"/>
+                            </list>
+                        </field>
+                    </group>
+                    <group string="Historial Reciente">
+                        <field name="maintenance_history_ids"
+                               nolabel="1"
+                               readonly="1">
+                            <list limit="10">
+                                <field name="date"/>
+                                <field name="description"/>
+                                <field name="odometer_at_service"/>
+                                <field name="technician_id"/>
+                                <field name="real_cost"/>
+                            </list>
+                        </field>
+                    </group>
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- ===== KANBAN DE VEHÍCULOS POR ESTADO DE MANTENIMIENTO ===== -->
+    <record id="view_fleet_vehicle_kanban_pmp" model="ir.ui.view">
+        <field name="name">fleet.vehicle.kanban.pmp</field>
+        <field name="model">fleet.vehicle</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="maintenance_status"
+                    group_create="false"
+                    group_delete="false">
+                <field name="name"/>
+                <field name="license_plate"/>
+                <field name="maintenance_status"/>
+                <field name="maintenance_plan_count"/>
+                <field name="maintenance_order_count"/>
+                <field name="odometer"/>
+                <field name="current_hours"/>
+                <field name="maintenance_remaining_value"/>
+                <field name="maintenance_remaining_unit"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="p-2">
+                            <!-- Header: ícono + nombre -->
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fa fa-truck fa-2x me-2 text-muted" title="Vehículo"/>
+                                <div>
+                                    <div class="fw-bold">
+                                        <field name="name"/>
+                                    </div>
+                                    <small class="text-muted">
+                                        <field name="license_plate"/>
+                                    </small>
+                                </div>
+                            </div>
+                            <!-- Métricas -->
+                            <div class="row text-center mb-2">
+                                <div class="col-6">
+                                    <div class="fw-bold text-primary">
+                                        <field name="odometer"/>
+                                    </div>
+                                    <small class="text-muted">km</small>
+                                </div>
+                                <div class="col-6">
+                                    <div class="fw-bold text-info">
+                                        <field name="current_hours"/>
+                                    </div>
+                                    <small class="text-muted">horas</small>
+                                </div>
+                            </div>
+                            <!-- Próximo servicio: valor restante -->
+                            <div class="text-center my-2">
+                                <t t-if="record.maintenance_status.raw_value == 'in_maintenance'">
+                                    <span class="badge bg-danger">
+                                        <i class="fa fa-cog fa-spin me-1"/> En servicio ahora
+                                    </span>
+                                </t>
+                                <t t-elif="record.maintenance_remaining_unit.raw_value">
+                                    <small class="text-muted d-block">Próximo servicio en:</small>
+                                    <span t-attf-class="fw-bold fs-5 #{record.maintenance_status.raw_value == 'upcoming' ? 'text-warning' : 'text-success'}">
+                                        <field name="maintenance_remaining_value" digits="[10,0]"/>
+                                    </span>
+                                    <span class="text-muted ms-1">
+                                        <field name="maintenance_remaining_unit"/>
+                                    </span>
+                                </t>
+                                <t t-else="">
+                                    <small class="text-muted">Sin planes activos</small>
+                                </t>
+                            </div>
+                            <!-- Estado badge -->
+                            <div class="mt-1">
+                                <field name="maintenance_status" widget="badge"
+                                       decoration-success="maintenance_status == 'ok'"
+                                       decoration-warning="maintenance_status == 'upcoming'"
+                                       decoration-danger="maintenance_status == 'in_maintenance'"/>
+                            </div>
+                            <!-- Contadores -->
+                            <div class="d-flex justify-content-between mt-2">
+                                <span class="badge bg-secondary">
+                                    <i class="fa fa-list-alt me-1" title="Planes"/>
+                                    <field name="maintenance_plan_count"/> planes
+                                </span>
+                                <span class="badge bg-secondary">
+                                    <i class="fa fa-wrench me-1" title="Órdenes"/>
+                                    <field name="maintenance_order_count"/> órdenes
+                                </span>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Acción para el Kanban PMP -->
+    <record id="action_fleet_vehicle_kanban_pmp" model="ir.actions.act_window">
+        <field name="name">Estado de Mantenimiento — Flota</field>
+        <field name="res_model">fleet.vehicle</field>
+        <field name="view_mode">kanban,list</field>
+        <field name="view_id" ref="view_fleet_vehicle_kanban_pmp"/>
+        <field name="context">{'search_default_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No hay vehículos registrados aún.
+            </p>
+            <p>
+                Agrega vehículos en el módulo Flota para comenzar
+                el seguimiento de mantenimiento predictivo.
+            </p>
+        </field>
+    </record>
+    <!-- Acción: Compras de Mantenimiento (RFQs generados por PMP) -->
+    <record id="action_pmp_purchase_orders" model="ir.actions.act_window">
+        <field name="name">Compras de Mantenimiento</field>
+        <field name="res_model">purchase.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('order_line.name', 'ilike', '[PMP]')]</field>
+        <field name="context">{'search_default_draft': 0}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No hay compras de mantenimiento registradas.
+            </p>
+            <p>
+                Usa "Verificar Repuestos" en Planificación para generar
+                solicitudes de presupuesto automáticamente.
+            </p>
+        </field>
+    </record>
+
+</odoo>
+
+

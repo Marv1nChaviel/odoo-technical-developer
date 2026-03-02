@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ===== PMP DASHBOARD (Solo Coordinador) ===== -->
+
+    <record id="view_pmp_dashboard_form" model="ir.ui.view">
+        <field name="name">pmp.dashboard.form</field>
+        <field name="model">pmp.dashboard</field>
+        <field name="arch" type="xml">
+            <form string="Dashboard de Mantenimiento" create="false" delete="false">
+                <sheet>
+                    <!-- Ocultar el título/nombre por defecto (pmp.dashboard,27) -->
+                    <div class="oe_title" invisible="1">
+                        <h1><field name="name"/></h1>
+                    </div>
+
+                    <!-- ═══════════════════════════════════════════════════════
+                         FILTRO DE PERÍODO
+                    ════════════════════════════════════════════════════════ -->
+                    <div class="o_form_sheet_bg p-3 mb-4 rounded"
+                         style="background:#f0f4ff; border:1px solid #c7d4f0;">
+                        <div class="d-flex align-items-center flex-wrap gap-2">
+                            <span class="fw-bold me-2">📅 Período:</span>
+                            <field name="date_from" nolabel="1"
+                                   class="o_field_widget me-1"
+                                   options="{'datepicker': {'todayBtn': true}}"/>
+                            <span class="mx-1">→</span>
+                            <field name="date_to" nolabel="1"
+                                   class="o_field_widget me-2"/>
+                            <button name="action_set_this_month" type="object"
+                                    string="Este Mes" class="btn btn-sm btn-outline-primary"/>
+                            <button name="action_set_last_month" type="object"
+                                    string="Mes Anterior" class="btn btn-sm btn-outline-secondary"/>
+                            <button name="action_set_this_year" type="object"
+                                    string="Este Año" class="btn btn-sm btn-outline-secondary"/>
+                            <span class="ms-auto text-muted fst-italic">
+                                <field name="period_label" nolabel="1" readonly="1"/>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- ═══════════════════════════════════════════════════════
+                         BLOQUE 1: FLOTA (tiempo real)
+                    ════════════════════════════════════════════════════════ -->
+                    <div class="mb-1"><h5 class="text-uppercase text-muted fw-bold">
+                        🚗 Estado de Flota <small class="text-muted fs-6">(tiempo real)</small>
+                    </h5></div>
+
+                    <div class="d-flex flex-wrap gap-3 mb-4">
+                        <button name="action_open_vehicles_in_maintenance" type="object"
+                                style="min-width:130px; background:#dc3545; color:white; border:none;"
+                                class="o_stat_button flex-column rounded-3 p-3 shadow-sm">
+                            <div style="font-size:2rem; font-weight:700;">
+                                <field name="vehicles_in_maintenance" nolabel="1"/>
+                            </div>
+                            <div class="fw-bold small">En Mantenimiento</div>
+                            <div class="opacity-75 small">
+                                <field name="pct_in_maintenance" nolabel="1" widget="percentage"/>
+                                del total
+                            </div>
+                        </button>
+
+                        <div style="min-width:130px; background:#fd7e14; color:white;"
+                             class="o_stat_button flex-column rounded-3 p-3 shadow-sm">
+                            <div style="font-size:2rem; font-weight:700;">
+                                <field name="vehicles_upcoming" nolabel="1"/>
+                            </div>
+                            <div class="fw-bold small">Próximo Mant.</div>
+                        </div>
+
+                        <div style="min-width:130px; background:#198754; color:white;"
+                             class="o_stat_button flex-column rounded-3 p-3 shadow-sm">
+                            <div style="font-size:2rem; font-weight:700;">
+                                <field name="vehicles_ok" nolabel="1"/>
+                            </div>
+                            <div class="fw-bold small">En Operación</div>
+                        </div>
+
+                        <div style="min-width:130px; background:#6c757d; color:white;"
+                             class="o_stat_button flex-column rounded-3 p-3 shadow-sm">
+                            <div style="font-size:2rem; font-weight:700;">
+                                <field name="total_vehicles" nolabel="1"/>
+                            </div>
+                            <div class="fw-bold small">Total Vehículos</div>
+                        </div>
+                    </div>
+
+                    <separator string="Órdenes en Período Seleccionado"/>
+
+                    <!-- ═══════════════════════════════════════════════════════
+                         BLOQUE 2: ÓRDENES (filtradas por período)
+                    ════════════════════════════════════════════════════════ -->
+                    <div class="d-flex flex-wrap gap-3 mb-4">
+
+                        <div style="min-width:120px; background:#0dcaf0; color:white;"
+                             class="o_stat_button flex-column rounded-3 p-3 shadow-sm">
+                            <div style="font-size:2rem; font-weight:700;">
+                                <field name="orders_open_total" nolabel="1"/>
+                            </div>
+                            <div class="fw-bold small">Abiertas (total)</div>
+                        </div>
+
+                        <button name="action_open_orders_draft" type="object"
+                                style="min-width:120px; background:#adb5bd; color:white; border:none;"
+                                class="o_stat_button flex-column rounded-3 p-3 shadow-sm">
+                            <div style="font-size:2rem; font-weight:700;">
+                                <field name="orders_draft" nolabel="1"/>
+                            </div>
+                            <div class="fw-bold small">Borradores</div>
+                        </button>
+
+                        <div style="min-width:120px; background:#0d6efd; color:white;"
+                             class="o_stat_button flex-column rounded-3 p-3 shadow-sm">
+                            <div style="font-size:2rem; font-weight:700;">
+                                <field name="orders_confirmed" nolabel="1"/>
+                            </div>
+                            <div class="fw-bold small">Confirmadas</div>
+                        </div>
+
+                        <button name="action_open_orders_in_progress" type="object"
+                                style="min-width:120px; background:#6610f2; color:white; border:none;"
+                                class="o_stat_button flex-column rounded-3 p-3 shadow-sm">
+                            <div style="font-size:2rem; font-weight:700;">
+                                <field name="orders_in_progress" nolabel="1"/>
+                            </div>
+                            <div class="fw-bold small">En Ejecución</div>
+                        </button>
+
+                        <button name="action_open_orders_done" type="object"
+                                style="min-width:120px; background:#198754; color:white; border:none;"
+                                class="o_stat_button flex-column rounded-3 p-3 shadow-sm">
+                            <div style="font-size:2rem; font-weight:700;">
+                                <field name="orders_done_period" nolabel="1"/>
+                            </div>
+                            <div class="fw-bold small">Completadas</div>
+                        </button>
+
+                        <div style="min-width:120px; background:#dc3545; color:white;"
+                             class="o_stat_button flex-column rounded-3 p-3 shadow-sm">
+                            <div style="font-size:2rem; font-weight:700;">
+                                <field name="orders_cancelled_period" nolabel="1"/>
+                            </div>
+                            <div class="fw-bold small">Canceladas</div>
+                        </div>
+                    </div>
+
+                    <separator string="Costos en Período Seleccionado"/>
+
+                    <!-- ═══════════════════════════════════════════════════════
+                         BLOQUE 3: COSTOS
+                    ════════════════════════════════════════════════════════ -->
+                    <div class="row mb-4">
+                        <div class="col-lg-3 col-sm-6 mb-3">
+                            <div class="rounded-3 p-3 shadow-sm text-center"
+                                 style="background:#212529; color:white; min-height:110px;">
+                                <div style="color:rgba(255,255,255,0.85); font-size:0.85rem; font-weight:600; letter-spacing:0.03em; margin-bottom:6px;">
+                                    Costo Real (Período)
+                                </div>
+                                <div style="font-size:1.7rem; font-weight:700;">
+                                    <field name="cost_period" nolabel="1" widget="monetary"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-sm-6 mb-3">
+                            <div class="rounded-3 p-3 shadow-sm text-center"
+                                 style="background:#343a40; color:white; min-height:110px;">
+                                <div style="color:rgba(255,255,255,0.85); font-size:0.85rem; font-weight:600; letter-spacing:0.03em; margin-bottom:6px;">
+                                    Costo Promedio / Orden
+                                </div>
+                                <div style="font-size:1.7rem; font-weight:700;">
+                                    <field name="cost_avg_per_order" nolabel="1" widget="monetary"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-sm-6 mb-3">
+                            <div class="rounded-3 p-3 shadow-sm text-center"
+                                 style="background:#0d6efd; color:white; min-height:110px;">
+                                <div style="color:rgba(255,255,255,0.85); font-size:0.85rem; font-weight:600; letter-spacing:0.03em; margin-bottom:6px;">
+                                    Presupuesto (abiertas)
+                                </div>
+                                <div style="font-size:1.7rem; font-weight:700;">
+                                    <field name="cost_planned_open" nolabel="1" widget="monetary"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-sm-6 mb-3">
+                            <!-- Variación: verde=ahorro, rojo=sobrecoste -->
+                            <div class="rounded-3 p-3 shadow-sm text-center"
+                                 style="min-height:110px;">
+                                <div style="background:#20c997; color:white; border-radius:0.75rem; padding:0.6rem;"
+                                     invisible="cost_variance_period &gt; 0">
+                                    <div style="color:rgba(255,255,255,0.9); font-size:0.85rem; font-weight:600; margin-bottom:4px;">Variación vs Plan ✅</div>
+                                    <div style="font-size:1.6rem; font-weight:700;">
+                                        <field name="cost_variance_period" nolabel="1" widget="monetary"/>
+                                    </div>
+                                </div>
+                                <div style="background:#dc3545; color:white; border-radius:0.75rem; padding:0.6rem;"
+                                     invisible="cost_variance_period &lt;= 0">
+                                    <div style="color:rgba(255,255,255,0.9); font-size:0.85rem; font-weight:600; margin-bottom:4px;">Variación vs Plan ⚠️</div>
+                                    <div style="font-size:1.6rem; font-weight:700;">
+                                        <field name="cost_variance_period" nolabel="1" widget="monetary"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <separator string="Inventario y Repuestos"/>
+
+                    <!-- ═══════════════════════════════════════════════════════
+                         BLOQUE 4: INVENTARIO
+                    ════════════════════════════════════════════════════════ -->
+                    <div class="d-flex flex-wrap gap-3 mb-3">
+                        <button name="action_open_pending_pickings" type="object"
+                                style="min-width:150px; background:#ffc107; color:#000; border:none;"
+                                class="o_stat_button flex-column rounded-3 p-3 shadow-sm">
+                            <div style="font-size:2rem; font-weight:700;">
+                                <field name="pickings_pending" nolabel="1"/>
+                            </div>
+                            <div class="fw-bold small">Entregas Pendientes</div>
+                        </button>
+
+                        <div style="min-width:150px; background:#dc3545; color:white;"
+                             class="o_stat_button flex-column rounded-3 p-3 shadow-sm">
+                            <div style="font-size:2rem; font-weight:700;">
+                                <field name="backorders_open" nolabel="1"/>
+                            </div>
+                            <div class="fw-bold small">Backorders Abiertos</div>
+                        </div>
+
+                        <div style="min-width:200px; background:#e9ecef; color:#212529;"
+                             class="o_stat_button flex-column rounded-3 p-3 shadow-sm">
+                            <div class="text-muted small mb-1">Valor Repuestos (período)</div>
+                            <div style="font-size:1.4rem; font-weight:700;">
+                                <field name="parts_total_cost_period" nolabel="1" widget="monetary"/>
+                            </div>
+                        </div>
+
+                        <div style="min-width:200px; background:#e9ecef; color:#212529;"
+                             class="o_stat_button flex-column rounded-3 p-3 shadow-sm">
+                            <div class="text-muted small mb-1">⭐ Más Consumido</div>
+                            <div style="font-size:1rem; font-weight:700; word-break:break-word;">
+                                <field name="most_used_part" nolabel="1"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ─── Acceso rápido ────────────────────────────────── -->
+                    <div class="d-flex gap-2 mt-3">
+                        <button name="action_open_history" type="object"
+                                string="📋 Historial del Período"
+                                class="btn btn-outline-secondary btn-sm"/>
+                    </div>
+
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action del Dashboard -->
+    <record id="action_pmp_dashboard" model="ir.actions.act_window">
+        <field name="name">Dashboard de Mantenimiento</field>
+        <field name="res_model">pmp.dashboard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_pmp_dashboard_form"/>
+        <field name="target">inline</field>
+        <field name="groups_id" eval="[(6, 0, [ref('predictive_maintenance_pro.group_pmp_coordinator')])]"/>
+    </record>
+
+    <!-- ===== HISTORY LINE: Lista de Reemplazos de Repuestos ===== -->
+
+    <record id="view_pmp_history_line_list" model="ir.ui.view">
+        <field name="name">pmp.maintenance.history.line.list</field>
+        <field name="model">pmp.maintenance.history.line</field>
+        <field name="arch" type="xml">
+            <list string="Reemplazos de Repuestos" default_order="service_date desc">
+                <field name="service_date" string="Fecha"/>
+                <field name="vehicle_id" string="Vehículo"/>
+                <field name="history_id" string="Historial"/>
+                <field name="product_id"/>
+                <field name="product_uom_id"/>
+                <field name="qty_delivered"/>
+                <field name="unit_cost"
+                       groups="predictive_maintenance_pro.group_pmp_coordinator,predictive_maintenance_pro.group_pmp_purchase"/>
+                <field name="subtotal" sum="Total"
+                       groups="predictive_maintenance_pro.group_pmp_coordinator,predictive_maintenance_pro.group_pmp_purchase"/>
+                <field name="last_change_date" string="Cambio Anterior"/>
+                <field name="km_since_last_change" string="Km con Repuesto" sum="Total km"/>
+                <field name="hours_since_last_change" string="Horas con Repuesto" sum="Total h"/>
+                <field name="cost_per_km" string="$/km"
+                       groups="predictive_maintenance_pro.group_pmp_coordinator,predictive_maintenance_pro.group_pmp_purchase"/>
+                <field name="cost_per_hour" string="$/h"
+                       groups="predictive_maintenance_pro.group_pmp_coordinator,predictive_maintenance_pro.group_pmp_purchase"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_pmp_history_line_search" model="ir.ui.view">
+        <field name="name">pmp.maintenance.history.line.search</field>
+        <field name="model">pmp.maintenance.history.line</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Reemplazos">
+                <field name="vehicle_id" string="Vehículo"/>
+                <field name="product_id" string="Repuesto"/>
+                <field name="history_id" string="Historial"/>
+                <separator/>
+                <filter string="Este Mes" name="this_month"
+                        domain="[('service_date','&gt;=', (context_today() + relativedelta(day=1)).strftime('%Y-%m-%d'))]"/>
+                <filter string="Este Año" name="this_year"
+                        domain="[('service_date','&gt;=', context_today().strftime('%Y-01-01'))]"/>
+                <group expand="0" string="Agrupar por">
+                    <filter string="Vehículo" name="group_vehicle"
+                            context="{'group_by':'vehicle_id'}"/>
+                    <filter string="Repuesto" name="group_product"
+                            context="{'group_by':'product_id'}"/>
+                    <filter string="Mes" name="group_month"
+                            context="{'group_by':'service_date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_pmp_history_lines" model="ir.actions.act_window">
+        <field name="name">Reemplazos de Repuestos</field>
+        <field name="res_model">pmp.maintenance.history.line</field>
+        <field name="view_mode">list</field>
+        <field name="search_view_id" ref="view_pmp_history_line_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Sin reemplazos registrados aún.
+            </p>
+            <p>Los reemplazos se crean automáticamente al completar una orden de mantenimiento.</p>
+        </field>
+    </record>
+
+    <!-- ===== SERVER ACTION: Abre el Dashboard creando el transitorio ===== -->
+
+    <record id="action_pmp_open_dashboard" model="ir.actions.server">
+        <field name="name">Dashboard de Mantenimiento</field>
+        <field name="model_id" ref="model_pmp_dashboard"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_open_dashboard()</field>
+        <field name="groups_id" eval="[(6, 0, [ref('predictive_maintenance_pro.group_pmp_coordinator')])]"/>
+    </record>
+
+</odoo>

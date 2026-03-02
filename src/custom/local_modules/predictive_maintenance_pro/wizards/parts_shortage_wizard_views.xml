@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Vista del wizard de faltantes de repuestos -->
+    <record id="view_pmp_parts_shortage_wizard" model="ir.ui.view">
+        <field name="name">pmp.parts.shortage.wizard.form</field>
+        <field name="model">pmp.parts.shortage.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Repuestos Faltantes para Mantenimiento Próximo">
+                <sheet>
+                    <div class="alert alert-info" role="alert"
+                         invisible="has_shortages">
+                        <strong>✅ Stock suficiente.</strong> Todos los vehículos próximos
+                        a mantenimiento tienen los repuestos necesarios en stock.
+                    </div>
+                    <div class="alert alert-warning" role="alert"
+                         invisible="not has_shortages">
+                        <strong>⚠️ Hay repuestos insuficientes</strong> para los vehículos
+                        que están próximos a su umbral de mantenimiento. Revise la lista
+                        y genere las solicitudes de presupuesto necesarias.
+                    </div>
+
+                    <field name="has_shortages" invisible="1"/>
+                    <field name="line_ids" nolabel="1" readonly="1">
+                        <list>
+                            <field name="product_id"/>
+                            <field name="product_uom_id"/>
+                            <field name="qty_needed"/>
+                            <field name="qty_available"
+                                   decoration-danger="qty_available == 0"
+                                   decoration-warning="qty_available &gt; 0 and qty_available &lt; qty_needed"/>
+                            <field name="qty_missing"
+                                   decoration-danger="qty_missing &gt; 0"/>
+                            <field name="supplier_id"/>
+                            <field name="note"/>
+                        </list>
+                    </field>
+                </sheet>
+                <footer>
+                    <button name="action_generate_rfq"
+                            string="Generar Solicitudes de Presupuesto"
+                            type="object"
+                            invisible="not has_shortages"
+                            class="btn-primary"/>
+                    <button string="Cerrar" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Acción que abre el wizard (se instancia automáticamente) -->
+    <record id="action_pmp_parts_shortage_wizard" model="ir.actions.act_window">
+        <field name="name">Verificar Repuestos Faltantes</field>
+        <field name="res_model">pmp.parts.shortage.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_pmp_parts_shortage_wizard"/>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

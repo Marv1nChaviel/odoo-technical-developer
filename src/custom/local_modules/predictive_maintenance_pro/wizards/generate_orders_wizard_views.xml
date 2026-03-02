@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ===== WIZARD: Generar Órdenes de Mantenimiento ===== -->
+
+    <record id="view_pmp_generate_orders_wizard_form" model="ir.ui.view">
+        <field name="name">pmp.generate.orders.wizard.form</field>
+        <field name="model">pmp.generate.orders.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Generar Órdenes de Mantenimiento">
+                <sheet>
+                    <group string="Configuración">
+                        <field name="vehicle_ids" widget="many2many_tags"
+                               placeholder="Dejar vacío para todos los vehículos activos..."/>
+                        <field name="only_overdue"/>
+                    </group>
+                    <group string="Resultado" invisible="not result_message">
+                        <field name="orders_created_count" readonly="1"/>
+                        <field name="result_message" readonly="1"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_generate_orders"
+                            string="Generar Órdenes"
+                            type="object"
+                            class="btn-primary"/>
+                    <button string="Cerrar" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_pmp_generate_orders_wizard" model="ir.actions.act_window">
+        <field name="name">Generar Órdenes de Mantenimiento</field>
+        <field name="res_model">pmp.generate.orders.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

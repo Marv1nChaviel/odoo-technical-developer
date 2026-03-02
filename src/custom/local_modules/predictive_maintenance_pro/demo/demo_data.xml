@@ -1,0 +1,672 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- DEMO DATA: Predictive Maintenance Pro -->
+
+    <!-- ============================================================
+         Marca y modelo de vehículo demo
+         ============================================================ -->
+    <record id="demo_brand_pmp" model="fleet.vehicle.model.brand">
+        <field name="name">Demo Fleet PMP</field>
+    </record>
+
+    <record id="demo_model_camion" model="fleet.vehicle.model">
+        <field name="name">Camión Pesado 300T</field>
+        <field name="brand_id" ref="demo_brand_pmp"/>
+    </record>
+
+    <record id="demo_model_maquinaria" model="fleet.vehicle.model">
+        <field name="name">Excavadora HX340</field>
+        <field name="brand_id" ref="demo_brand_pmp"/>
+    </record>
+
+    <!-- ============================================================
+         Vehículos demo
+         ============================================================ -->
+    <record id="demo_vehicle_camion_01" model="fleet.vehicle">
+        <field name="model_id" ref="demo_model_camion"/>
+        <field name="license_plate">PMP-C001</field>
+    </record>
+
+    <record id="demo_vehicle_maquinaria_01" model="fleet.vehicle">
+        <field name="model_id" ref="demo_model_maquinaria"/>
+        <field name="license_plate">PMP-M001</field>
+    </record>
+
+    <!-- ============================================================
+         Productos / Repuestos
+         ============================================================ -->
+    <record id="product_filtro_aceite" model="product.product">
+        <field name="name">Filtro de Aceite</field>
+        <field name="type">consu</field>
+        <field name="standard_price">45.00</field>
+        <field name="list_price">65.00</field>
+    </record>
+
+    <record id="product_aceite_motor" model="product.product">
+        <field name="name">Aceite de Motor 15W40 (5L)</field>
+        <field name="type">consu</field>
+        <field name="standard_price">80.00</field>
+        <field name="list_price">110.00</field>
+    </record>
+
+    <record id="product_filtro_combustible" model="product.product">
+        <field name="name">Filtro de Combustible</field>
+        <field name="type">consu</field>
+        <field name="standard_price">35.00</field>
+        <field name="list_price">50.00</field>
+    </record>
+
+    <record id="product_correa_distribucion" model="product.product">
+        <field name="name">Correa de Distribución</field>
+        <field name="type">consu</field>
+        <field name="standard_price">220.00</field>
+        <field name="list_price">320.00</field>
+    </record>
+
+    <record id="product_pastillas_freno" model="product.product">
+        <field name="name">Pastillas de Freno (juego)</field>
+        <field name="type">consu</field>
+        <field name="standard_price">95.00</field>
+        <field name="list_price">140.00</field>
+    </record>
+
+    <!-- ============================================================
+         Planes de mantenimiento (con vehicle_id obligatorio)
+         ============================================================ -->
+
+    <!-- Plan 1: Cambio de aceite cada 5,000 km -->
+    <record id="plan_cambio_aceite_km" model="pmp.maintenance.plan">
+        <field name="name">Cambio de Aceite — Cada 5,000 km</field>
+        <field name="vehicle_id" ref="demo_vehicle_camion_01"/>
+        <field name="trigger_type">km</field>
+        <field name="threshold_value">5000</field>
+        <field name="interval_value">5000</field>
+        <field name="notes">&lt;p&gt;Cambiar aceite y filtro. Verificar nivel de refrigerante.&lt;/p&gt;</field>
+    </record>
+    <record id="plan_line_filtro_aceite" model="pmp.maintenance.plan.line">
+        <field name="plan_id" ref="plan_cambio_aceite_km"/>
+        <field name="product_id" ref="product_filtro_aceite"/>
+        <field name="qty_planned">1</field>
+    </record>
+    <record id="plan_line_aceite_motor" model="pmp.maintenance.plan.line">
+        <field name="plan_id" ref="plan_cambio_aceite_km"/>
+        <field name="product_id" ref="product_aceite_motor"/>
+        <field name="qty_planned">5</field>
+    </record>
+
+    <!-- Plan 2: Revisión general cada 500 horas — maquinaria -->
+    <record id="plan_revision_horas" model="pmp.maintenance.plan">
+        <field name="name">Revisión General — Cada 500 Horas</field>
+        <field name="vehicle_id" ref="demo_vehicle_maquinaria_01"/>
+        <field name="trigger_type">hours</field>
+        <field name="threshold_value">500</field>
+        <field name="interval_value">500</field>
+        <field name="notes">&lt;p&gt;Inspección completa de sistema hidráulico y frenos.&lt;/p&gt;</field>
+    </record>
+    <record id="plan_line_filtro_combustible" model="pmp.maintenance.plan.line">
+        <field name="plan_id" ref="plan_revision_horas"/>
+        <field name="product_id" ref="product_filtro_combustible"/>
+        <field name="qty_planned">2</field>
+    </record>
+
+    <!-- Plan 3: Cambio de correa de distribución cada 60,000 km -->
+    <record id="plan_correa_distribucion" model="pmp.maintenance.plan">
+        <field name="name">Cambio Correa Distribución — 60,000 km</field>
+        <field name="vehicle_id" ref="demo_vehicle_camion_01"/>
+        <field name="trigger_type">km</field>
+        <field name="threshold_value">60000</field>
+        <field name="interval_value">60000</field>
+        <field name="notes">&lt;p&gt;Cambiar correa y tensor. Revisar bomba de agua.&lt;/p&gt;</field>
+    </record>
+    <record id="plan_line_correa" model="pmp.maintenance.plan.line">
+        <field name="plan_id" ref="plan_correa_distribucion"/>
+        <field name="product_id" ref="product_correa_distribucion"/>
+        <field name="qty_planned">1</field>
+    </record>
+
+    <!-- ============================================================
+         Órdenes de mantenimiento (con vehicle_id)
+         ============================================================ -->
+
+    <!-- Orden completada -->
+    <record id="order_cambio_aceite_done" model="pmp.maintenance.order">
+        <field name="name">MNT/2026/02/0001</field>
+        <field name="vehicle_id" ref="demo_vehicle_camion_01"/>
+        <field name="plan_id" ref="plan_cambio_aceite_km"/>
+        <field name="date_scheduled">2026-02-15</field>
+        <field name="state">done</field>
+        <field name="planned_cost">150.00</field>
+        <field name="odometer_at_service">25000</field>
+        <field name="notes">&lt;p&gt;Servicio completado. Próximo en 30,000 km.&lt;/p&gt;</field>
+    </record>
+
+    <record id="line_aceite_done_1" model="pmp.maintenance.order.line">
+        <field name="order_id" ref="order_cambio_aceite_done"/>
+        <field name="product_id" ref="product_filtro_aceite"/>
+        <field name="qty_planned">1</field>
+        <field name="qty_delivered">1</field>
+        <field name="unit_cost">45.00</field>
+    </record>
+
+    <record id="line_aceite_done_2" model="pmp.maintenance.order.line">
+        <field name="order_id" ref="order_cambio_aceite_done"/>
+        <field name="product_id" ref="product_aceite_motor"/>
+        <field name="qty_planned">1</field>
+        <field name="qty_delivered">1</field>
+        <field name="unit_cost">80.00</field>
+    </record>
+
+    <!-- Historial correspondiente -->
+    <record id="history_cambio_aceite" model="pmp.maintenance.history">
+        <field name="vehicle_id" ref="demo_vehicle_camion_01"/>
+        <field name="order_id" ref="order_cambio_aceite_done"/>
+        <field name="date">2026-02-15</field>
+        <field name="description">Cambio de aceite y filtro completado. Odómetro: 25,000 km.</field>
+        <field name="odometer_at_service">25000</field>
+    </record>
+
+    <!-- Orden en ejecución -->
+    <record id="order_revision_in_progress" model="pmp.maintenance.order">
+        <field name="name">MNT/2026/03/0001</field>
+        <field name="vehicle_id" ref="demo_vehicle_maquinaria_01"/>
+        <field name="plan_id" ref="plan_revision_horas"/>
+        <field name="date_scheduled">2026-03-01</field>
+        <field name="state">in_progress</field>
+        <field name="planned_cost">200.00</field>
+        <field name="odometer_at_service">32000</field>
+    </record>
+
+    <record id="line_revision_filtro_comb_1" model="pmp.maintenance.order.line">
+        <field name="order_id" ref="order_revision_in_progress"/>
+        <field name="product_id" ref="product_filtro_combustible"/>
+        <field name="qty_planned">2</field>
+        <field name="unit_cost">35.00</field>
+    </record>
+    <record id="line_revision_filtro_aceite_1" model="pmp.maintenance.order.line">
+        <field name="order_id" ref="order_revision_in_progress"/>
+        <field name="product_id" ref="product_filtro_aceite"/>
+        <field name="qty_planned">1</field>
+        <field name="unit_cost">45.00</field>
+    </record>
+
+    <!-- Orden confirmada -->
+    <record id="order_correa_confirmed" model="pmp.maintenance.order">
+        <field name="name">MNT/2026/03/0002</field>
+        <field name="vehicle_id" ref="demo_vehicle_camion_01"/>
+        <field name="plan_id" ref="plan_correa_distribucion"/>
+        <field name="date_scheduled">2026-03-15</field>
+        <field name="state">confirmed</field>
+        <field name="planned_cost">350.00</field>
+    </record>
+
+    <record id="line_correa_confirmed" model="pmp.maintenance.order.line">
+        <field name="order_id" ref="order_correa_confirmed"/>
+        <field name="product_id" ref="product_correa_distribucion"/>
+        <field name="qty_planned">1</field>
+        <field name="unit_cost">220.00</field>
+    </record>
+
+    <!-- Orden en borrador -->
+    <record id="order_frenos_draft" model="pmp.maintenance.order">
+        <field name="name">MNT/2026/03/0003</field>
+        <field name="vehicle_id" ref="demo_vehicle_camion_01"/>
+        <field name="date_scheduled">2026-03-20</field>
+        <field name="state">draft</field>
+        <field name="planned_cost">120.00</field>
+    </record>
+
+    <record id="line_frenos_draft_pastillas" model="pmp.maintenance.order.line">
+        <field name="order_id" ref="order_frenos_draft"/>
+        <field name="product_id" ref="product_pastillas_freno"/>
+        <field name="qty_planned">2</field>
+        <field name="unit_cost">95.00</field>
+    </record>
+    <record id="line_frenos_draft_filtro" model="pmp.maintenance.order.line">
+        <field name="order_id" ref="order_frenos_draft"/>
+        <field name="product_id" ref="product_filtro_aceite"/>
+        <field name="qty_planned">1</field>
+        <field name="unit_cost">45.00</field>
+    </record>
+
+    <!-- ============================================================
+         HISTORIAL DE REEMPLAZOS — demo_data
+         Múltiples servicios pasados con detalle de vida útil por repuesto
+         ============================================================ -->
+
+    <!-- ── CAMIÓN PMP-C001 ───────────────────────────────────────── -->
+
+    <!-- Servicio 1: Cambio de aceite en 5,000 km (primer cambio) -->
+    <record id="history_c001_aceite_1" model="pmp.maintenance.history">
+        <field name="vehicle_id" ref="demo_vehicle_camion_01"/>
+        <field name="date">2025-08-10</field>
+        <field name="description">Primer cambio de aceite y filtro. Odómetro: 5,000 km.</field>
+        <field name="odometer_at_service">5000</field>
+        <field name="technician_id" ref="base.user_admin"/>
+    </record>
+    <record id="hline_c001_aceite_1_filtro" model="pmp.maintenance.history.line">
+        <field name="history_id" ref="history_c001_aceite_1"/>
+        <field name="product_id" ref="product_filtro_aceite"/>
+        <field name="qty_delivered">1</field>
+        <field name="unit_cost">45.00</field>
+        <field name="subtotal">45.00</field>
+        <field name="odometer_at_change">5000</field>
+        <field name="last_change_odometer">0</field>
+    </record>
+    <record id="hline_c001_aceite_1_oil" model="pmp.maintenance.history.line">
+        <field name="history_id" ref="history_c001_aceite_1"/>
+        <field name="product_id" ref="product_aceite_motor"/>
+        <field name="qty_delivered">5</field>
+        <field name="unit_cost">80.00</field>
+        <field name="subtotal">400.00</field>
+        <field name="odometer_at_change">5000</field>
+        <field name="last_change_odometer">0</field>
+    </record>
+
+    <!-- Servicio 2: Cambio de aceite en 10,000 km -->
+    <record id="history_c001_aceite_2" model="pmp.maintenance.history">
+        <field name="vehicle_id" ref="demo_vehicle_camion_01"/>
+        <field name="date">2025-10-20</field>
+        <field name="description">Segundo cambio de aceite y filtro. Odómetro: 10,000 km. Vida útil filtro: 5,000 km.</field>
+        <field name="odometer_at_service">10000</field>
+        <field name="technician_id" ref="base.user_admin"/>
+    </record>
+    <record id="hline_c001_aceite_2_filtro" model="pmp.maintenance.history.line">
+        <field name="history_id" ref="history_c001_aceite_2"/>
+        <field name="product_id" ref="product_filtro_aceite"/>
+        <field name="qty_delivered">1</field>
+        <field name="unit_cost">45.00</field>
+        <field name="subtotal">45.00</field>
+        <field name="odometer_at_change">10000</field>
+        <field name="last_change_date">2025-08-10</field>
+        <field name="last_change_odometer">5000</field>
+    </record>
+    <record id="hline_c001_aceite_2_oil" model="pmp.maintenance.history.line">
+        <field name="history_id" ref="history_c001_aceite_2"/>
+        <field name="product_id" ref="product_aceite_motor"/>
+        <field name="qty_delivered">5</field>
+        <field name="unit_cost">80.00</field>
+        <field name="subtotal">400.00</field>
+        <field name="odometer_at_change">10000</field>
+        <field name="last_change_date">2025-08-10</field>
+        <field name="last_change_odometer">5000</field>
+    </record>
+
+    <!-- Servicio 3: Cambio de aceite en 15,000 km + pastillas de freno -->
+    <record id="history_c001_aceite_3" model="pmp.maintenance.history">
+        <field name="vehicle_id" ref="demo_vehicle_camion_01"/>
+        <field name="date">2025-12-05</field>
+        <field name="description">Cambio de aceite, filtro y pastillas de freno. Odómetro: 15,000 km.</field>
+        <field name="odometer_at_service">15000</field>
+        <field name="technician_id" ref="base.user_admin"/>
+    </record>
+    <record id="hline_c001_aceite_3_filtro" model="pmp.maintenance.history.line">
+        <field name="history_id" ref="history_c001_aceite_3"/>
+        <field name="product_id" ref="product_filtro_aceite"/>
+        <field name="qty_delivered">1</field>
+        <field name="unit_cost">45.00</field>
+        <field name="subtotal">45.00</field>
+        <field name="odometer_at_change">15000</field>
+        <field name="last_change_date">2025-10-20</field>
+        <field name="last_change_odometer">10000</field>
+    </record>
+    <record id="hline_c001_aceite_3_oil" model="pmp.maintenance.history.line">
+        <field name="history_id" ref="history_c001_aceite_3"/>
+        <field name="product_id" ref="product_aceite_motor"/>
+        <field name="qty_delivered">5</field>
+        <field name="unit_cost">80.00</field>
+        <field name="subtotal">400.00</field>
+        <field name="odometer_at_change">15000</field>
+        <field name="last_change_date">2025-10-20</field>
+        <field name="last_change_odometer">10000</field>
+    </record>
+    <record id="hline_c001_aceite_3_frenos" model="pmp.maintenance.history.line">
+        <field name="history_id" ref="history_c001_aceite_3"/>
+        <field name="product_id" ref="product_pastillas_freno"/>
+        <field name="qty_delivered">1</field>
+        <field name="unit_cost">95.00</field>
+        <field name="subtotal">95.00</field>
+        <field name="odometer_at_change">15000</field>
+        <field name="last_change_odometer">0</field>
+    </record>
+
+    <!-- Servicio 4: Cambio de aceite + filtro combustible en 20,000 km -->
+    <record id="history_c001_aceite_4" model="pmp.maintenance.history">
+        <field name="vehicle_id" ref="demo_vehicle_camion_01"/>
+        <field name="date">2026-01-18</field>
+        <field name="description">Cambio de aceite, filtro aceite y filtro combustible. Odómetro: 20,000 km.</field>
+        <field name="odometer_at_service">20000</field>
+        <field name="technician_id" ref="base.user_admin"/>
+    </record>
+    <record id="hline_c001_aceite_4_filtro" model="pmp.maintenance.history.line">
+        <field name="history_id" ref="history_c001_aceite_4"/>
+        <field name="product_id" ref="product_filtro_aceite"/>
+        <field name="qty_delivered">1</field>
+        <field name="unit_cost">45.00</field>
+        <field name="subtotal">45.00</field>
+        <field name="odometer_at_change">20000</field>
+        <field name="last_change_date">2025-12-05</field>
+        <field name="last_change_odometer">15000</field>
+    </record>
+    <record id="hline_c001_aceite_4_oil" model="pmp.maintenance.history.line">
+        <field name="history_id" ref="history_c001_aceite_4"/>
+        <field name="product_id" ref="product_aceite_motor"/>
+        <field name="qty_delivered">5</field>
+        <field name="unit_cost">80.00</field>
+        <field name="subtotal">400.00</field>
+        <field name="odometer_at_change">20000</field>
+        <field name="last_change_date">2025-12-05</field>
+        <field name="last_change_odometer">15000</field>
+    </record>
+    <record id="hline_c001_fcombustible" model="pmp.maintenance.history.line">
+        <field name="history_id" ref="history_c001_aceite_4"/>
+        <field name="product_id" ref="product_filtro_combustible"/>
+        <field name="qty_delivered">1</field>
+        <field name="unit_cost">35.00</field>
+        <field name="subtotal">35.00</field>
+        <field name="odometer_at_change">20000</field>
+        <field name="last_change_odometer">0</field>
+    </record>
+
+    <!-- Servicio 5 (el más reciente ya existente en demo + líneas de detalle) -->
+    <record id="hline_history_aceite_filtro" model="pmp.maintenance.history.line">
+        <field name="history_id" ref="history_cambio_aceite"/>
+        <field name="product_id" ref="product_filtro_aceite"/>
+        <field name="qty_delivered">1</field>
+        <field name="unit_cost">45.00</field>
+        <field name="subtotal">45.00</field>
+        <field name="odometer_at_change">25000</field>
+        <field name="last_change_date">2026-01-18</field>
+        <field name="last_change_odometer">20000</field>
+    </record>
+    <record id="hline_history_aceite_oil" model="pmp.maintenance.history.line">
+        <field name="history_id" ref="history_cambio_aceite"/>
+        <field name="product_id" ref="product_aceite_motor"/>
+        <field name="qty_delivered">5</field>
+        <field name="unit_cost">80.00</field>
+        <field name="subtotal">400.00</field>
+        <field name="odometer_at_change">25000</field>
+        <field name="last_change_date">2026-01-18</field>
+        <field name="last_change_odometer">20000</field>
+    </record>
+
+    <!-- ── MAQUINARIA PMP-M001 ──────────────────────────────────── -->
+
+    <!-- Servicio 1: Revisión general a las 500 horas -->
+    <record id="history_m001_rev_500h" model="pmp.maintenance.history">
+        <field name="vehicle_id" ref="demo_vehicle_maquinaria_01"/>
+        <field name="date">2025-09-01</field>
+        <field name="description">Revisión general a las 500 horas. Cambio de filtros hidráulicos y combustible.</field>
+        <field name="odometer_at_service">0</field>
+        <field name="hours_at_service">500</field>
+        <field name="technician_id" ref="base.user_admin"/>
+    </record>
+    <record id="hline_m001_filtro_comb_1" model="pmp.maintenance.history.line">
+        <field name="history_id" ref="history_m001_rev_500h"/>
+        <field name="product_id" ref="product_filtro_combustible"/>
+        <field name="qty_delivered">2</field>
+        <field name="unit_cost">35.00</field>
+        <field name="subtotal">70.00</field>
+        <field name="hours_at_change">500</field>
+        <field name="last_change_hours">0</field>
+    </record>
+
+    <!-- Servicio 2: Revisión general a las 1,000 horas -->
+    <record id="history_m001_rev_1000h" model="pmp.maintenance.history">
+        <field name="vehicle_id" ref="demo_vehicle_maquinaria_01"/>
+        <field name="date">2025-12-15</field>
+        <field name="description">Revisión general a las 1,000 horas. Vida útil filtros: 500 horas.</field>
+        <field name="odometer_at_service">0</field>
+        <field name="hours_at_service">1000</field>
+        <field name="technician_id" ref="base.user_admin"/>
+    </record>
+    <record id="hline_m001_filtro_comb_2" model="pmp.maintenance.history.line">
+        <field name="history_id" ref="history_m001_rev_1000h"/>
+        <field name="product_id" ref="product_filtro_combustible"/>
+        <field name="qty_delivered">2</field>
+        <field name="unit_cost">35.00</field>
+        <field name="subtotal">70.00</field>
+        <field name="hours_at_change">1000</field>
+        <field name="last_change_date">2025-09-01</field>
+        <field name="last_change_hours">500</field>
+    </record>
+
+    <!-- ============================================================
+         PLANES POR DÍAS CALENDARIO
+         ============================================================ -->
+
+    <!-- Plan 1: Revisión de fluidos cada 7 días — Camión PMP-C001 -->
+    <record id="plan_fluidos_semanal" model="pmp.maintenance.plan">
+        <field name="name">Revisión de Fluidos — Semanal (7 días)</field>
+        <field name="vehicle_id" ref="demo_vehicle_camion_01"/>
+        <field name="trigger_type">days</field>
+        <field name="threshold_value">7</field>
+        <field name="interval_value">7</field>
+        <field name="last_trigger_date">2026-02-23</field>
+        <field name="notes">&lt;p&gt;Verificar nivel de aceite, refrigerante y líquido de frenos. Revisar presión de neumáticos.&lt;/p&gt;</field>
+    </record>
+
+    <!-- Plan 2: Inspección de seguridad cada 30 días — Maquinaria PMP-M001 -->
+    <record id="plan_seguridad_mensual" model="pmp.maintenance.plan">
+        <field name="name">Inspección de Seguridad — Mensual (30 días)</field>
+        <field name="vehicle_id" ref="demo_vehicle_maquinaria_01"/>
+        <field name="trigger_type">days</field>
+        <field name="threshold_value">30</field>
+        <field name="interval_value">30</field>
+        <field name="last_trigger_date">2026-02-01</field>
+        <field name="notes">&lt;p&gt;Inspección completa de sistemas de seguridad: luces, bocinas, espejos, extintores y cinturones.&lt;/p&gt;</field>
+    </record>
+    <record id="plan_line_filtro_seg" model="pmp.maintenance.plan.line">
+        <field name="plan_id" ref="plan_seguridad_mensual"/>
+        <field name="product_id" ref="product_filtro_combustible"/>
+        <field name="qty_planned">1</field>
+    </record>
+
+    <!-- Plan 3: Mantenimiento general anual — Camión PMP-C001 -->
+    <record id="plan_mantenimiento_anual" model="pmp.maintenance.plan">
+        <field name="name">Mantenimiento General — Anual (365 días)</field>
+        <field name="vehicle_id" ref="demo_vehicle_camion_01"/>
+        <field name="trigger_type">days</field>
+        <field name="threshold_value">365</field>
+        <field name="interval_value">365</field>
+        <field name="last_trigger_date">2025-03-01</field>
+        <field name="notes">&lt;p&gt;Revisión anual completa: motor, transmisión, suspensión, frenos y sistema eléctrico. Cambio de todos los filtros y fluidos.&lt;/p&gt;</field>
+    </record>
+    <record id="plan_line_anual_filtro_aceite" model="pmp.maintenance.plan.line">
+        <field name="plan_id" ref="plan_mantenimiento_anual"/>
+        <field name="product_id" ref="product_filtro_aceite"/>
+        <field name="qty_planned">1</field>
+    </record>
+    <record id="plan_line_anual_aceite" model="pmp.maintenance.plan.line">
+        <field name="plan_id" ref="plan_mantenimiento_anual"/>
+        <field name="product_id" ref="product_aceite_motor"/>
+        <field name="qty_planned">5</field>
+    </record>
+    <record id="plan_line_anual_correa" model="pmp.maintenance.plan.line">
+        <field name="plan_id" ref="plan_mantenimiento_anual"/>
+        <field name="product_id" ref="product_correa_distribucion"/>
+        <field name="qty_planned">1</field>
+    </record>
+    <record id="plan_line_anual_frenos" model="pmp.maintenance.plan.line">
+        <field name="plan_id" ref="plan_mantenimiento_anual"/>
+        <field name="product_id" ref="product_pastillas_freno"/>
+        <field name="qty_planned">1</field>
+    </record>
+
+    <!-- Órdenes generadas por planes de días -->
+
+    <!-- Revisión semanal completada (la anterior) -->
+    <record id="order_fluidos_sem_done" model="pmp.maintenance.order">
+        <field name="name">MNT/2026/02/0010</field>
+        <field name="vehicle_id" ref="demo_vehicle_camion_01"/>
+        <field name="plan_id" ref="plan_fluidos_semanal"/>
+        <field name="date_scheduled">2026-02-23</field>
+        <field name="state">done</field>
+        <field name="planned_cost">0.00</field>
+        <field name="notes">&lt;p&gt;Fluidos en niveles correctos. Presión de neumáticos ajustada.&lt;/p&gt;</field>
+    </record>
+
+    <record id="line_fluidos_sem_done_aceite" model="pmp.maintenance.order.line">
+        <field name="order_id" ref="order_fluidos_sem_done"/>
+        <field name="product_id" ref="product_aceite_motor"/>
+        <field name="qty_planned">1</field>
+        <field name="qty_delivered">1</field>
+        <field name="unit_cost">80.00</field>
+    </record>
+
+    <!-- Revisión semanal pendiente (la próxima — 2026-03-02) -->
+    <record id="order_fluidos_sem_draft" model="pmp.maintenance.order">
+        <field name="name">MNT/2026/03/0010</field>
+        <field name="vehicle_id" ref="demo_vehicle_camion_01"/>
+        <field name="plan_id" ref="plan_fluidos_semanal"/>
+        <field name="date_scheduled">2026-03-02</field>
+        <field name="state">draft</field>
+        <field name="planned_cost">0.00</field>
+    </record>
+
+    <record id="line_fluidos_sem_draft_aceite" model="pmp.maintenance.order.line">
+        <field name="order_id" ref="order_fluidos_sem_draft"/>
+        <field name="product_id" ref="product_aceite_motor"/>
+        <field name="qty_planned">1</field>
+        <field name="unit_cost">80.00</field>
+    </record>
+
+
+    <record id="order_seguridad_feb_done" model="pmp.maintenance.order">
+        <field name="name">MNT/2026/02/0011</field>
+        <field name="vehicle_id" ref="demo_vehicle_maquinaria_01"/>
+        <field name="plan_id" ref="plan_seguridad_mensual"/>
+        <field name="date_scheduled">2026-02-01</field>
+        <field name="state">done</field>
+        <field name="planned_cost">35.00</field>
+        <field name="notes">&lt;p&gt;Inspección mensual completada. Extintor recargado.&lt;/p&gt;</field>
+    </record>
+
+    <record id="line_seg_feb_filtro" model="pmp.maintenance.order.line">
+        <field name="order_id" ref="order_seguridad_feb_done"/>
+        <field name="product_id" ref="product_filtro_combustible"/>
+        <field name="qty_planned">1</field>
+        <field name="qty_delivered">1</field>
+        <field name="unit_cost">35.00</field>
+    </record>
+
+    <!-- Inspección mensual pendiente (Mar) -->
+    <record id="order_seguridad_mar_draft" model="pmp.maintenance.order">
+        <field name="name">MNT/2026/03/0011</field>
+        <field name="vehicle_id" ref="demo_vehicle_maquinaria_01"/>
+        <field name="plan_id" ref="plan_seguridad_mensual"/>
+        <field name="date_scheduled">2026-03-03</field>
+        <field name="state">confirmed</field>
+        <field name="planned_cost">35.00</field>
+    </record>
+
+    <record id="line_seg_mar_filtro" model="pmp.maintenance.order.line">
+        <field name="order_id" ref="order_seguridad_mar_draft"/>
+        <field name="product_id" ref="product_filtro_combustible"/>
+        <field name="qty_planned">1</field>
+        <field name="unit_cost">35.00</field>
+    </record>
+
+
+    <record id="order_anual_2025_done" model="pmp.maintenance.order">
+        <field name="name">MNT/2025/03/0001</field>
+        <field name="vehicle_id" ref="demo_vehicle_camion_01"/>
+        <field name="plan_id" ref="plan_mantenimiento_anual"/>
+        <field name="date_scheduled">2025-03-01</field>
+        <field name="state">done</field>
+        <field name="planned_cost">650.00</field>
+        <field name="odometer_at_service">15000</field>
+        <field name="notes">&lt;p&gt;Mantenimiento anual 2025 completado. Próximo: Mar 2026.&lt;/p&gt;</field>
+    </record>
+
+    <record id="line_anual_2025_filtro" model="pmp.maintenance.order.line">
+        <field name="order_id" ref="order_anual_2025_done"/>
+        <field name="product_id" ref="product_filtro_aceite"/>
+        <field name="qty_planned">1</field>
+        <field name="qty_delivered">1</field>
+        <field name="unit_cost">45.00</field>
+    </record>
+    <record id="line_anual_2025_aceite" model="pmp.maintenance.order.line">
+        <field name="order_id" ref="order_anual_2025_done"/>
+        <field name="product_id" ref="product_aceite_motor"/>
+        <field name="qty_planned">5</field>
+        <field name="qty_delivered">5</field>
+        <field name="unit_cost">80.00</field>
+    </record>
+    <record id="line_anual_2025_correa" model="pmp.maintenance.order.line">
+        <field name="order_id" ref="order_anual_2025_done"/>
+        <field name="product_id" ref="product_correa_distribucion"/>
+        <field name="qty_planned">1</field>
+        <field name="qty_delivered">1</field>
+        <field name="unit_cost">220.00</field>
+    </record>
+    <record id="line_anual_2025_frenos" model="pmp.maintenance.order.line">
+        <field name="order_id" ref="order_anual_2025_done"/>
+        <field name="product_id" ref="product_pastillas_freno"/>
+        <field name="qty_planned">1</field>
+        <field name="qty_delivered">1</field>
+        <field name="unit_cost">95.00</field>
+    </record>
+
+    <!-- Mantenimiento anual próximo (Mar 2026) -->
+    <record id="order_anual_2026_draft" model="pmp.maintenance.order">
+        <field name="name">MNT/2026/03/0020</field>
+        <field name="vehicle_id" ref="demo_vehicle_camion_01"/>
+        <field name="plan_id" ref="plan_mantenimiento_anual"/>
+        <field name="date_scheduled">2026-03-01</field>
+        <field name="state">draft</field>
+        <field name="planned_cost">650.00</field>
+    </record>
+    <record id="line_anual_filtro" model="pmp.maintenance.order.line">
+        <field name="order_id" ref="order_anual_2026_draft"/>
+        <field name="product_id" ref="product_filtro_aceite"/>
+        <field name="qty_planned">1</field>
+        <field name="unit_cost">45.00</field>
+    </record>
+    <record id="line_anual_aceite" model="pmp.maintenance.order.line">
+        <field name="order_id" ref="order_anual_2026_draft"/>
+        <field name="product_id" ref="product_aceite_motor"/>
+        <field name="qty_planned">5</field>
+        <field name="unit_cost">80.00</field>
+    </record>
+    <record id="line_anual_correa" model="pmp.maintenance.order.line">
+        <field name="order_id" ref="order_anual_2026_draft"/>
+        <field name="product_id" ref="product_correa_distribucion"/>
+        <field name="qty_planned">1</field>
+        <field name="unit_cost">220.00</field>
+    </record>
+    <record id="line_anual_frenos" model="pmp.maintenance.order.line">
+        <field name="order_id" ref="order_anual_2026_draft"/>
+        <field name="product_id" ref="product_pastillas_freno"/>
+        <field name="qty_planned">1</field>
+        <field name="unit_cost">95.00</field>
+    </record>
+
+    <!-- Historial del mantenimiento anual 2025 -->
+    <record id="history_anual_2025" model="pmp.maintenance.history">
+        <field name="vehicle_id" ref="demo_vehicle_camion_01"/>
+        <field name="order_id" ref="order_anual_2025_done"/>
+        <field name="date">2025-03-01</field>
+        <field name="description">Mantenimiento anual 2025. Cambio completo de filtros, aceite, correa y pastillas.</field>
+        <field name="odometer_at_service">15000</field>
+        <field name="technician_id" ref="base.user_admin"/>
+    </record>
+    <record id="hline_anual_filtro" model="pmp.maintenance.history.line">
+        <field name="history_id" ref="history_anual_2025"/>
+        <field name="product_id" ref="product_filtro_aceite"/>
+        <field name="qty_delivered">1</field>
+        <field name="unit_cost">45.00</field>
+        <field name="subtotal">45.00</field>
+        <field name="odometer_at_change">15000</field>
+        <field name="last_change_odometer">0</field>
+    </record>
+    <record id="hline_anual_correa" model="pmp.maintenance.history.line">
+        <field name="history_id" ref="history_anual_2025"/>
+        <field name="product_id" ref="product_correa_distribucion"/>
+        <field name="qty_delivered">1</field>
+        <field name="unit_cost">220.00</field>
+        <field name="subtotal">220.00</field>
+        <field name="odometer_at_change">15000</field>
+        <field name="last_change_odometer">0</field>
+    </record>
+
+</odoo>

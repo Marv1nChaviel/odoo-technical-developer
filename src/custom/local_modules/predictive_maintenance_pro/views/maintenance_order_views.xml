@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ===== MAINTENANCE ORDER===== -->
+
+    <!-- Search -->
+    <record id="view_pmp_maintenance_order_search" model="ir.ui.view">
+        <field name="name">pmp.maintenance.order.search</field>
+        <field name="model">pmp.maintenance.order</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Órdenes">
+                <field name="name" string="Referencia"/>
+                <field name="vehicle_id"/>
+                <field name="technician_id"/>
+                <field name="plan_id"/>
+                <separator/>
+                <filter string="Borrador" name="draft" domain="[('state','=','draft')]"/>
+                <filter string="Confirmadas" name="confirmed" domain="[('state','=','confirmed')]"/>
+                <filter string="En Ejecución" name="in_progress" domain="[('state','=','in_progress')]"/>
+                <filter string="Completadas" name="done" domain="[('state','=','done')]"/>
+                <filter string="Canceladas" name="cancelled" domain="[('state','=','cancelled')]"/>
+                <separator/>
+                <filter string="Mis Órdenes" name="my_orders"
+                        domain="[('technician_id','=',uid)]"/>
+                <group expand="0" string="Agrupar por">
+                    <filter string="Vehículo" name="group_vehicle"
+                            context="{'group_by':'vehicle_id'}"/>
+                    <filter string="Estado" name="group_state"
+                            context="{'group_by':'state'}"/>
+                    <filter string="Técnico" name="group_technician"
+                            context="{'group_by':'technician_id'}"/>
+                    <filter string="Mes Programado" name="group_month"
+                            context="{'group_by':'date_scheduled:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- List -->
+    <record id="view_pmp_maintenance_order_list" model="ir.ui.view">
+        <field name="name">pmp.maintenance.order.list</field>
+        <field name="model">pmp.maintenance.order</field>
+        <field name="arch" type="xml">
+            <list string="Órdenes de Mantenimiento"
+                  decoration-muted="state == 'cancelled'"
+                  decoration-success="state == 'done'"
+                  decoration-warning="state == 'in_progress '"
+                  decoration-info="state == 'confirmed'">
+                <field name="name"/>
+                <field name="vehicle_id"/>
+                <field name="plan_id"/>
+                <field name="technician_id"/>
+                <field name="date_scheduled"/>
+                <field name="state"/>
+                <field name="planned_cost" sum="Total Planificado"/>
+                <field name="real_cost" sum="Total Real"/>
+                <field name="cost_variance"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Kanban -->
+    <record id="view_pmp_maintenance_order_kanban" model="ir.ui.view">
+        <field name="name">pmp.maintenance.order.kanban</field>
+        <field name="model">pmp.maintenance.order</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" group_create="false">
+                <field name="name"/>
+                <field name="vehicle_id"/>
+                <field name="technician_id"/>
+                <field name="date_scheduled"/>
+                <field name="state"/>
+                <field name="real_cost"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="p-2">
+                            <div class="fw-bold mb-1">
+                                <field name="name"/>
+                            </div>
+                            <div class="text-muted mb-1">
+                                <i class="fa fa-truck me-1" title="Vehículo"/>
+                                <field name="vehicle_id"/>
+                            </div>
+                            <div class="text-muted mb-1" t-if="record.technician_id.value">
+                                <i class="fa fa-user me-1" title="Técnico"/>
+                                <field name="technician_id"/>
+                            </div>
+                            <div class="text-muted mb-1">
+                                <i class="fa fa-calendar me-1" title="Fecha Programada"/>
+                                <field name="date_scheduled"/>
+                            </div>
+                            <div class="d-flex justify-content-between mt-2">
+                                <field name="state" widget="badge"/>
+                                <small class="text-muted">
+                                    <field name="real_cost" widget="monetary"/>
+                                </small>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Form -->
+    <record id="view_pmp_maintenance_order_form" model="ir.ui.view">
+        <field name="name">pmp.maintenance.order.form</field>
+        <field name="model">pmp.maintenance.order</field>
+        <field name="arch" type="xml">
+            <form string="Orden de Mantenimiento">
+                <header>
+                    <button name="action_confirm"
+                            string="Confirmar"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_start"
+                            string="Iniciar Trabajo"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'confirmed'"/>
+                    <button name="action_done"
+                            string="Marcar como Completada"
+                            type="object"
+                            class="btn-success"
+                            invisible="state != 'in_progress'"/>
+                    <button name="action_cancel"
+                            string="Cancelar"
+                            type="object"
+                            class="btn-danger"
+                            invisible="state in ['done','cancelled']"/>
+                    <button name="action_reset_draft"
+                            string="Restablecer a Borrador"
+                            type="object"
+                            invisible="state != 'cancelled'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,confirmed,in_progress,done"/>
+                </header>
+                <sheet>
+                    <!-- Smart Buttons -->
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_picking"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-dolly"
+                                invisible="not picking_id">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="picking_count"/>
+                                </span>
+                                <span class="o_stat_text">Entrega</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <!-- Banner: entrega parcial / repuestos pendientes de compra -->
+                    <div class="alert alert-warning mb-3" role="alert"
+                         invisible="not picking_id or picking_id_state == 'done'">
+                        <strong>⚠️ Entrega de repuestos pendiente.</strong>
+                        Algunos repuestos aún no han sido entregados completamente.
+                        La orden puede iniciarse con los materiales disponibles;
+                        los faltantes llegarán cuando se reciba la compra asociada.
+                        <br/>
+                        Estado de transferencia:
+                        <field name="picking_id" widget="many2one_avatar" readonly="1"/>
+                    </div>
+
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Información General">
+                            <field name="vehicle_id" required="True"
+                                   readonly="state not in ['draft','confirmed']"/>
+                            <field name="plan_id"
+                                   readonly="state not in ['draft','confirmed']"/>
+                            <field name="technician_id"
+                                   readonly="state == 'done'"/>
+                            <field name="helper_ids"
+                                   widget="many2many_tags"
+                                   readonly="state == 'done'"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group string="Fechas y Servicio">
+                            <field name="date_scheduled"
+                                   readonly="state not in ['draft','confirmed']"/>
+                            <field name="date_start" readonly="1"/>
+                            <field name="date_done" readonly="1"/>
+                            <field name="odometer_at_service"
+                                   string="Odómetro al Servicio (km)"
+                                   readonly="state in ['done','cancelled']"/>
+                            <field name="hours_at_service"
+                                   string="Horas al Servicio"
+                                   readonly="state in ['done','cancelled']"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Repuestos y Materiales" name="lines">
+                            <field name="line_ids"
+                                   readonly="state in ['done','cancelled']">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="product_id" required="True"/>
+                                    <field name="product_uom_id" readonly="1"/>
+                                    <field name="qty_planned"/>
+                                    <field name="qty_delivered" readonly="1"
+                                           decoration-success="qty_delivered &gt;= qty_planned"
+                                           decoration-warning="qty_delivered &gt; 0 and qty_delivered &lt; qty_planned"
+                                           decoration-muted="qty_delivered == 0"/>
+                                    <field name="qty_pending" readonly="1"
+                                           decoration-danger="qty_pending &gt; 0"
+                                           decoration-muted="qty_pending == 0"/>
+                                    <field name="unit_cost"
+                                           groups="predictive_maintenance_pro.group_pmp_coordinator,predictive_maintenance_pro.group_pmp_purchase"/>
+                                    <field name="subtotal" readonly="1"
+                                           groups="predictive_maintenance_pro.group_pmp_coordinator,predictive_maintenance_pro.group_pmp_purchase"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Costos" name="costs"
+                              groups="predictive_maintenance_pro.group_pmp_coordinator,predictive_maintenance_pro.group_pmp_purchase">
+                            <group>
+                                <group string="Resumen de Costos">
+                                    <field name="planned_cost"/>
+                                    <field name="real_cost" readonly="1"/>
+                                    <field name="cost_variance" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Observaciones" name="notes">
+                            <field name="notes" placeholder="Observaciones técnicas, diagnóstico, hallazgos..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_pmp_maintenance_order" model="ir.actions.act_window">
+        <field name="name">Órdenes de Mantenimiento</field>
+        <field name="res_model">pmp.maintenance.order</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="view_pmp_maintenance_order_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                ¡No hay órdenes de mantenimiento!
+            </p>
+            <p>
+                Las órdenes se generan automáticamente cuando un vehículo
+                supera el umbral definido en su plan de mantenimiento.
+            </p>
+        </field>
+    </record>
+
+</odoo>

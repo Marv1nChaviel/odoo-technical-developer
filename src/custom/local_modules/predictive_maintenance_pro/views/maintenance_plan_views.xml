@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ===== MAINTENANCE PLAN ===== -->
+
+    <!-- Search -->
+    <record id="view_pmp_maintenance_plan_search" model="ir.ui.view">
+        <field name="name">pmp.maintenance.plan.search</field>
+        <field name="model">pmp.maintenance.plan</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Planes">
+                <field name="name" string="Plan"/>
+                <field name="vehicle_id"/>
+                <field name="trigger_type"/>
+                <separator/>
+                <filter string="Activos" name="active" domain="[('active','=',True)]"/>
+                <filter string="Inactivos" name="inactive" domain="[('active','=',False)]"/>
+                <separator/>
+                <filter string="Por Km" name="by_km" domain="[('trigger_type','=','km')]"/>
+                <filter string="Por Horas" name="by_hours" domain="[('trigger_type','=','hours')]"/>
+                <filter string="Por Días" name="by_days" domain="[('trigger_type','=','days')]"/>
+                <filter string="Por Fecha" name="by_date" domain="[('trigger_type','=','date')]"/>
+                <group expand="0" string="Agrupar por">
+                    <filter string="Vehículo" name="group_vehicle" context="{'group_by':'vehicle_id'}"/>
+                    <filter string="Tipo de Umbral" name="group_trigger" context="{'group_by':'trigger_type'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- List -->
+    <record id="view_pmp_maintenance_plan_list" model="ir.ui.view">
+        <field name="name">pmp.maintenance.plan.list</field>
+        <field name="model">pmp.maintenance.plan</field>
+        <field name="arch" type="xml">
+            <list string="Planes de Mantenimiento" decoration-muted="not active">
+                <field name="name"/>
+                <field name="vehicle_id"/>
+                <field name="trigger_type" widget="badge"
+                       decoration-info="trigger_type == 'km'"
+                       decoration-warning="trigger_type == 'hours'"
+                       decoration-success="trigger_type == 'date'"
+                       decoration-primary="trigger_type == 'days'"/>
+                <field name="threshold_value" string="Umbral / Intervalo"/>
+                <field name="next_trigger_value"
+                       invisible="trigger_type == 'days' or trigger_type == 'date'"/>
+                <field name="next_trigger_date"
+                       invisible="trigger_type != 'days'"/>
+                <field name="order_count" string="Órdenes"/>
+                <field name="active" invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form -->
+    <record id="view_pmp_maintenance_plan_form" model="ir.ui.view">
+        <field name="name">pmp.maintenance.plan.form</field>
+        <field name="model">pmp.maintenance.plan</field>
+        <field name="arch" type="xml">
+            <form string="Plan de Mantenimiento">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_orders"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-wrench">
+                            <field name="order_count" widget="statinfo" string="Órdenes"/>
+                        </button>
+                    </div>
+                    <widget name="web_ribbon" title="Archivado"
+                            bg_color="text-bg-danger"
+                            invisible="active"/>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Nombre del plan..." required="True"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Vehículo y Configuración">
+                            <field name="vehicle_id" required="True"/>
+                            <field name="trigger_type" required="True"/>
+                            <field name="trigger_date"
+                                   invisible="trigger_type != 'date'"
+                                   required="trigger_type == 'date'"/>
+                        </group>
+                        <group string="Umbrales">
+                            <!-- km / hours: umbral + intervalo + próximo valor -->
+                            <field name="threshold_value"
+                                   string="Primer Disparo (km)"
+                                   invisible="trigger_type != 'km'"/>
+                            <field name="threshold_value"
+                                   string="Primer Disparo (horas)"
+                                   invisible="trigger_type != 'hours'"/>
+                            <field name="interval_value"
+                                   string="Repetir cada (km)"
+                                   invisible="trigger_type != 'km'"/>
+                            <field name="interval_value"
+                                   string="Repetir cada (horas)"
+                                   invisible="trigger_type != 'hours'"/>
+                            <field name="last_trigger_value" readonly="1"
+                                   invisible="trigger_type not in ['km','hours']"/>
+                            <field name="next_trigger_value" readonly="1"
+                                   invisible="trigger_type not in ['km','hours']"/>
+                            <!-- days: intervalo en días + próxima fecha -->
+                            <field name="threshold_value"
+                                   string="Intervalo (días)"
+                                   invisible="trigger_type != 'days'"/>
+                            <field name="last_trigger_date" readonly="1"
+                                   invisible="trigger_type != 'days'"/>
+                            <field name="next_trigger_date" readonly="1"
+                                   invisible="trigger_type != 'days'"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Repuestos Estimados" name="parts">
+                            <field name="part_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="product_id" required="True"/>
+                                    <field name="product_uom_id" readonly="1"/>
+                                    <field name="qty_planned"/>
+                                    <field name="unit_cost"/>
+                                    <field name="subtotal" readonly="1"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Órdenes Generadas" name="orders">
+                            <field name="order_ids" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="state" widget="badge"
+                                           decoration-muted="state == 'draft'"
+                                           decoration-info="state == 'confirmed'"
+                                           decoration-warning="state == 'in_progress'"
+                                           decoration-success="state == 'done'"
+                                           decoration-danger="state == 'cancelled'"/>
+                                    <field name="date_scheduled"/>
+                                    <field name="technician_id"/>
+                                    <field name="real_cost"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Notas" name="notes">
+                            <field name="notes" placeholder="Instrucciones adicionales..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_pmp_maintenance_plan" model="ir.actions.act_window">
+        <field name="name">Planes de Mantenimiento</field>
+        <field name="res_model">pmp.maintenance.plan</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_pmp_maintenance_plan_search"/>
+        <field name="context">{'search_default_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                ¡Crea tu primer plan de mantenimiento!
+            </p>
+            <p>
+                Define umbrales de km, horas o fecha para generar órdenes
+                de mantenimiento automáticamente.
+            </p>
+        </field>
+    </record>
+
+</odoo>

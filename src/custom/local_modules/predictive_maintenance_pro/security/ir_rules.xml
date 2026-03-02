@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- ================================================================
+             Record Rules — Técnicos solo ven sus propias órdenes asignadas
+             ================================================================ -->
+
+        <!-- Técnico: solo puede leer/escribir órdenes donde es el asignado -->
+        <record id="rule_pmp_order_technician_own" model="ir.rule">
+            <field name="name">PMP: Técnico ve solo sus órdenes asignadas</field>
+            <field name="model_id" ref="model_pmp_maintenance_order"/>
+            <field name="domain_force">[('technician_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('predictive_maintenance_pro.group_pmp_technician'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <!-- Coordinador: ve todas las órdenes (sin restricción) -->
+        <record id="rule_pmp_order_coordinator_all" model="ir.rule">
+            <field name="name">PMP: Coordinador ve todas las órdenes</field>
+            <field name="model_id" ref="model_pmp_maintenance_order"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('predictive_maintenance_pro.group_pmp_coordinator'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+        </record>
+
+        <!-- Compras: ve todas las órdenes en lectura -->
+        <record id="rule_pmp_order_purchase_read" model="ir.rule">
+            <field name="name">PMP: Compras lectura todas las órdenes</field>
+            <field name="model_id" ref="model_pmp_maintenance_order"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('predictive_maintenance_pro.group_pmp_purchase'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <!-- Técnico: ver líneas de sus propias órdenes -->
+        <record id="rule_pmp_order_line_technician_own" model="ir.rule">
+            <field name="name">PMP: Técnico modifica líneas de sus órdenes</field>
+            <field name="model_id" ref="model_pmp_maintenance_order_line"/>
+            <field name="domain_force">[('order_id.technician_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('predictive_maintenance_pro.group_pmp_technician'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+    </data>
+</odoo>

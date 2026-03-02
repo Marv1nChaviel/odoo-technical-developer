@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ===== MENÚ PRINCIPAL ===== -->
+
+    <menuitem id="menu_pmp_root"
+              name="Mantenimiento Predictivo"
+              web_icon="predictive_maintenance_pro,static/description/icon.png"
+              sequence="80"/>
+
+    <!-- Dashboard (solo Coordinador) -->
+    <menuitem id="menu_pmp_dashboard"
+              name="Dashboard"
+              parent="menu_pmp_root"
+              action="action_pmp_open_dashboard"
+              sequence="1"
+              groups="predictive_maintenance_pro.group_pmp_coordinator"/>
+
+    <!-- Submenu: Flota -->
+    <menuitem id="menu_pmp_fleet"
+              name="Flota"
+              parent="menu_pmp_root"
+              sequence="10"/>
+
+    <menuitem id="menu_pmp_vehicles"
+              name="Vehículos y Maquinaria"
+              parent="menu_pmp_fleet"
+              action="fleet.fleet_vehicle_action"
+              sequence="10"
+              groups="predictive_maintenance_pro.group_pmp_coordinator,predictive_maintenance_pro.group_pmp_technician"/>
+
+    <!-- Submenu: Planificación -->
+    <menuitem id="menu_pmp_planning"
+              name="Planificación"
+              parent="menu_pmp_root"
+              sequence="20"
+              groups="predictive_maintenance_pro.group_pmp_coordinator"/>
+
+    <menuitem id="menu_pmp_fleet_status"
+              name="Estado de Flota"
+              parent="menu_pmp_planning"
+              action="action_fleet_vehicle_kanban_pmp"
+              sequence="5"/>
+
+    <menuitem id="menu_pmp_plans"
+              name="Planes de Mantenimiento"
+              parent="menu_pmp_planning"
+              action="action_pmp_maintenance_plan"
+              sequence="10"/>
+
+    <menuitem id="menu_pmp_parts_shortage"
+              name="Verificar Repuestos"
+              parent="menu_pmp_planning"
+              action="action_pmp_parts_shortage_wizard"
+              sequence="15"
+              groups="predictive_maintenance_pro.group_pmp_coordinator,predictive_maintenance_pro.group_pmp_purchase"/>
+
+    <!-- Submenu: Operaciones -->
+    <menuitem id="menu_pmp_operations"
+              name="Operaciones"
+              parent="menu_pmp_root"
+              sequence="30"
+              groups="predictive_maintenance_pro.group_pmp_coordinator,predictive_maintenance_pro.group_pmp_technician,predictive_maintenance_pro.group_pmp_purchase"/>
+
+    <menuitem id="menu_pmp_orders"
+              name="Órdenes de Mantenimiento"
+              parent="menu_pmp_operations"
+              action="action_pmp_maintenance_order"
+              sequence="10"
+              groups="predictive_maintenance_pro.group_pmp_coordinator,predictive_maintenance_pro.group_pmp_technician"/>
+
+    <menuitem id="menu_pmp_history"
+              name="Historial de Servicios"
+              parent="menu_pmp_operations"
+              action="action_pmp_maintenance_history"
+              sequence="20"
+              groups="predictive_maintenance_pro.group_pmp_coordinator,predictive_maintenance_pro.group_pmp_purchase"/>
+
+    <menuitem id="menu_pmp_parts_replacements"
+              name="Reemplazos de Repuestos"
+              parent="menu_pmp_operations"
+              action="action_pmp_history_lines"
+              sequence="25"
+              groups="predictive_maintenance_pro.group_pmp_coordinator,predictive_maintenance_pro.group_pmp_purchase"/>
+
+    <menuitem id="menu_pmp_purchase_orders"
+              name="Compras de Mantenimiento"
+              parent="menu_pmp_operations"
+              action="action_pmp_purchase_orders"
+              sequence="30"
+              groups="predictive_maintenance_pro.group_pmp_coordinator,predictive_maintenance_pro.group_pmp_purchase"/>
+
+    <menuitem id="menu_pmp_generate_orders"
+              name="Generar Órdenes"
+              parent="menu_pmp_operations"
+              action="action_pmp_generate_orders_wizard"
+              sequence="35"
+              groups="predictive_maintenance_pro.group_pmp_coordinator"/>
+
+    <!-- Submenu: Reportes -->
+    <menuitem id="menu_pmp_reports"
+              name="Reportes"
+              parent="menu_pmp_root"
+              sequence="40"
+              groups="predictive_maintenance_pro.group_pmp_coordinator,predictive_maintenance_pro.group_pmp_purchase"/>
+
+</odoo>
